@@ -3,8 +3,12 @@
 <p align="center">Search for unauthinticated mongoDB services</p>
 
 <p align="center">
+  <a href="https://python.org">
+    <img src="https://img.shields.io/static/v1.svg?label=Python&message=3.6.8&color=blue&style=popout-square" alt="Discord Server">
+  </a>
+    
   <a href="https://discord.gg/3nfQadt">
-    <img src="https://img.shields.io/discord/264666918034604032.svg?color=%237289DA&label=Discord&style=popout-square" alt="Discord Server">
+    <img src="https://img.shields.io/discord/264666918034604032.svg?color=%237289DA&label=Discord&style=popout-square"                                                              alt="Discord Server">
   </a>
   </p>
 
