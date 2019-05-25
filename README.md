@@ -24,7 +24,7 @@
 
 * Shodan API key (optional)
 
-## Features
+## FEATURES
 
 * Checks for Open MongoDB instances on the Internet with Shodan or Masscan
 
