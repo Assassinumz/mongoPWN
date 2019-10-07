@@ -20,17 +20,16 @@
 
 * Python >= 3.6.8
 
-* [Masscan](https://github.com/robertdavidgraham/masscan)
+* ~~[Masscan](https://github.com/robertdavidgraham/masscan)~~
 
-* Shodan API key (optional)
+* Shodan API key
 
 ## FEATURES
 
-* Checks for Open MongoDB instances on the Internet with Shodan or Masscan
+* Checks for Open MongoDB instances on the Internet with Shodan or ~~Masscan~~
 
 * You can also provide your own Host List
 
-* Stores hosts IPs with open authintication in `open_instances-[datetime].txt`
 
 ## INSTALLATION
 
@@ -42,14 +41,7 @@
             or
 `python3 -m pip install -r requirements.txt`
 
-* (optional) Enter your Shodan API Key in [config.json](config.json) (you can also do it while running the tool)
-```
-{
-  "KEY" : "Your Key  Here"      # Change null to your key
-}
-```
-
 * Run the tool
-`python main.py`
+`python main.py -h`
 
 
