@@ -1,4 +1,5 @@
 requests
 shodan
 pymongo
-datetime
+colorama
+argparse

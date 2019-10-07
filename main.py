@@ -1,206 +1,125 @@
-import os, sys, shodan, json, requests
+#!/bin/python3
+#
+#                           MongoPWN
+#         A simple script to find open mongoDB instances 
+#                 on the internet using shodan
+#                         
+#                      by: Assassin umz
+
+
+import os, platform
+import argparse, shodan
 from pymongo import MongoClient
-from datetime import datetime as dt
-from time import sleep
+from colorama import init, Fore, Style
+
+init(convert=True)
+red = Fore.RED
+green = Fore.GREEN
+yellow = Fore.YELLOW
+end = Style.RESET_ALL
 
 
-red ='\033[91m'
-green= '\033[92m'
-yellow = '\033[93m'
-end= '\033[0m'
+parser = argparse.ArgumentParser()
+
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('-i', '--input', help="Hosts IPs file path, must be in seperate lines")
+group.add_argument('-s', '--shodan', help="Get a list of hosts from shodan, provide the API key")
+
+parser.add_argument('-o', '--output', help='Output open Hosts IPs to a file')
+args = parser.parse_args()
 
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-
-
-try:
-    with open('config.json', 'r') as f:
-        data = json.load(f)
-    KEY = data['KEY']
-    TOS = data['TOS']
-except Exception:
-    KEY = None
-    TOS = None
-
+def cls():
+    if platform.system().lower() == "windows":
+        return os.system('cls')
+    else:
+        return os.system('clear')
 
 
 def banner():
-    os.system('clear')
+    cls()
 
     print('''
-                                  ______ _    _ _   _ 
-                                  | ___ \ |  | | \ | |   
- _ __ ___   ___  _ __   __ _  ___ | |_/ / |  | |  \| |
-| '_ ` _ \ / _ \| '_ \ / _` |/ _ \|  __/| |/\| | . ` |
-| | | | | | (_) | | | | (_| | (_) | |   \  /\  / |\  |
-|_| |_| |_|\___/|_| |_|\__, |\___/\_|    \/  \/\_| \_/
-                        __/ |                         
-                       |___/
-
-    By: Assassinumz
-''')
-
-
-def check():
-    banner()
-    if str(os.name) == 'nt':
-        print(f"{red}[-]{end} This program is incompatible with windows. Retry in a Linux OS")
-        sys.exit()
-
-    if not os.path.isfile('/usr/bin/masscan'):
-        print(f"{red}[-]{end} Make sure you've installed Masscan and it's present in the '/usr/bin/' directory")
-        sys.exit()
-
-    try:
-        requests.get('https://google.com')
-        pass
-    except:
-        print(f"{red}[-]{end} Network Issue, make sure your network connection is working and retry")
-        sys.exit()
-
-    if TOS != "Yes":
-        print(f"{yellow}[=]{end} This tool is for educational purposes only, and complete responsibility of the End-User. Do not cause any harm to the Databases you find and inform the developers.")
-        inp = input(f"Do you agree on the TOS ? (Y/N)\n-> ")
-        
-        if inp.lower() in ['n', 'no']:
-            print("okay...")
-            sys.exit()
-        
-        elif inp.lower() in ['y', 'yes']:
-            data['TOS'] = "Yes"
-            
-            with open("config.json", 'w') as f:
-                json.dump(data, f, indent=4)
-        
-        else:
-            sys.exit()
+ {0}   |{1}                                       ______ _    _ _   _ 
+ {0} .'|'.{1}                                     | ___ \ |  | | \ | |
+ {0}/.'|\ \{1}   _ __ ___   ___  _ __   __ _  ___ | |_/ / |  | |  \| |
+ {0}| /|'.|{1}  | '_ ` _ \ / _ \| '_ \ / _` |/ _ \|  __/| |/\| | . ` |
+ {0} \ |\/{1}   | | | | | | (_) | | | | (_| | (_) | |   \  /\  / |\  |
+ {0}  \|/{1}    |_| |_| |_|\___/|_| |_|\__, |\___/\_|    \/  \/\_| \_/
+ {0}   `{1}                             __/ |
+                                 |___/                        
+                
+                {0}By: Assassinumz{1}
+'''.format(green, end))
 
 
-def file_read():
-    banner()
-    file = input(f"{yellow}[=]{end} Enter File Location (Example: /root/host_list.txt):\n-> ")
-
-    ips = []
-
-    if os.path.isfile(file):
-        with open(file, 'r') as f:
-            hosts = f.readlines()
-
-        for line in hosts:
-            line = line.strip('\n')
-            ips.append(line)
-    
-        return ips
-
-    else:
-        print(f"\n{red}[-]{end} File not found, make sure the path you've enter is right")
-        input("Hit RETURN to continue")
-        file_read()
-
-
-def generate():
-    banner()
-    ips = []
-
-    choice = int(input(f"{yellow}[=]{end} Choose a Scan method:\n1) Shodan\n2) Masscan\n-> "))
-    
-    if choice == 1:
-
-        if KEY is None:
-            KEY = input(f"\n{yellow}[=]{end} Enter your Shodan API key:\n-> ")
-
-        api = shodan.Shodan(str(KEY))
-      
-        results = api.search("mongodb")
-        
-        for result in results['matches']:
-            ip = result['ip_str']
-            ips.append(ip)
-
-        return ips
-
-    elif choice == 2:
-        input(f"{yellow}[=]{end} Once you have enough hosts hit 'ctrl + c' to stop the scan and wait a few seconds\nHit RETURN to continue")
-        try:
-            os.system("masscan 0.0.0.0/0 -p27017 --exclude 255.255.255.255 --open-only | awk '{print $6}' > masscan.txt")
-
-        except KeyboardInterrupt:
-            pass
-        
-        with open('masscan.txt', 'r') as f:
-            lines = f.readlines()
-        
-        for line in lines:
-            line = line.strip('\n')
-            ips.append(line)
-        
-        return ips
-
-        
-def mongo_scan():
+def main(lines):
     banner()
 
-    choose = input(f"{yellow}[=]{end} Do you want the program to generate a list of hosts running mongoDB ? (Y/N)\n-> ")
+    #TODO: Add Counter
+    print(f"{yellow}[=]{end} Scanning {len(lines)} hosts\n")
+    open_instances = 0
 
-    if choose.lower() in ['n', 'no']:
-        ips = file_read()
-    
-    elif choose.lower() in ['y', 'yes']:
-        ips = generate()
-
-    banner()
-    print(f"{green}[+]{end} Found {len(ips)} hosts\n")
-
-    filename = "open_instances" + str(dt.now().strftime('[%a, %d-%m-%Y %H.%M]')) +".txt"
-    print(f"{yellow}[=]{end} Starting the scan\n")
-
-    for ip in ips:
+    for line in lines:
+        ip = line.strip('\n')
         client = MongoClient(str(ip), socketTimeoutMS=1000, serverSelectionTimeoutMS=1000)
         if client is None:
-            print(f"{red}[-]{end} Failed : {ip}")
             continue
 
         try:
             dbs = client.list_database_names()
 
-            print(f"{green}[+]{end} Found Open Instance: {ip}")
+            print(f"{green}[+]{end} {ip}")
 
-            with open(filename, 'a') as f:
-                f.write(f"{ip}\n")
-                
+            if args.output != None:
+                with open(args.output, 'a') as f:
+                    f.write(f"{ip}\n")
+            open_instances+=1                
             continue
 
         except Exception:
-            print(f"{red}[-]{end} Failed : {ip}")
             continue
+    
+    print(f"{green}[+]{end} Found {open_instances} open hosts out of {len(lines)}")
+    print("Thank You")
 
-    main()
 
+def InputFile(file):
 
-def main():
+    if not os.path.isfile(file):
+        print(f"{red}[-]{end} File Does not exist")
+        exit(0)
+    
+    with open(file, 'r') as f:
+        lines = f.readlines()
+    
+    main(lines)
+    
+
+def Shodan():
     banner()
 
-    print(f"{yellow}[=]{end} Choose an option:\n1) Scan\n0) Exit")
-    # Todo : Connect to host option
-    try:
-        choose = int(input('-> '))
-    except Exception:
-        print(f"{red}[-]{end} Invalid Input")
-        sleep(2)
-        main()
+    print(f"{yellow}[=]{end} Getting MongoDB Hosts from shodan")
 
-    if choose == 0:
-        sys.exit()
+    api = shodan.Shodan(args.shodan)
+    lines = []
+    results = api.search("MongoDB", limit=1000)
 
-    elif choose == 1:
-        mongo_scan()
-
-    else:
-        main()
+    for result in results['matches']:
+        ip = result['ip_str']
+        lines.append(ip)
+    
+    main(lines)
 
 
-if  __name__ == "__main__":
-    check()
-    main()
+if args.input != None:
+    InputFile(args.input)
+
+elif args.shodan != None:
+    Shodan()
+
+else:
+    exit(0)
+
+#TODO: Add masscan
+
