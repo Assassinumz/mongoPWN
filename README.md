@@ -1,6 +1,6 @@
 <h1 align="center">MongoPWN</h1>
 
-<p align="center">Search for unauthinticated mongoDB services</p>
+<p align="center">Search for unauthenticated mongoDB services with Shodan and Masscan</p>
 
 <p align="center">
   <a href="https://python.org">
@@ -24,7 +24,7 @@
 
 * Shodan API key (optional)
 
-## Features
+## FEATURES
 
 * Checks for Open MongoDB instances on the Internet with Shodan or Masscan
 
