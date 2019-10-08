@@ -1,4 +1,6 @@
-#!/bin/python3
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+#
 #
 #                           MongoPWN
 #         A simple script to find open mongoDB instances 
@@ -7,7 +9,7 @@
 #                      by: Assassin umz
 
 
-import os, platform
+import os, platform, requests
 import argparse, shodan
 from pymongo import MongoClient
 from colorama import init, Fore, Style
