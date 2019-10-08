@@ -29,6 +29,14 @@ parser.add_argument('-o', '--output', help='Output open Hosts IPs to a file')
 args = parser.parse_args()
 
 
+try:
+    requests.get('https://google.com')
+    pass
+except:
+    print(f"{red}[-]{end} Network Issue, make sure your network connection is working and retry")
+    exit(0)
+
+
 def cls():
     if platform.system().lower() == "windows":
         return os.system('cls')
