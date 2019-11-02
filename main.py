@@ -14,11 +14,13 @@ import argparse, shodan
 from pymongo import MongoClient
 from colorama import init, Fore, Style
 
+
 init(convert=True)
 red = Fore.RED
 green = Fore.GREEN
 yellow = Fore.YELLOW
 end = Style.RESET_ALL
+open_instances = 0
 
 
 parser = argparse.ArgumentParser()
@@ -26,17 +28,10 @@ parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-i', '--input', help="Hosts IPs file path, must be in seperate lines")
 group.add_argument('-s', '--shodan', help="Get a list of hosts from shodan, provide the API key")
+group.add_argument('-m', '--masscan', help="Get a list of hosts from masscan")
 
 parser.add_argument('-o', '--output', help='Output open Hosts IPs to a file')
 args = parser.parse_args()
-
-
-try:
-    requests.get('https://google.com')
-    pass
-except:
-    print(f"{red}[-]{end} Network Issue, make sure your network connection is working and retry")
-    exit(0)
 
 
 def cls():
@@ -63,35 +58,25 @@ def banner():
 '''.format(green, end))
 
 
-def main(lines):
-    banner()
+def Check(ip):
+    global open_instances
+    client = MongoClient(str(ip), socketTimeoutMS=1000, serverSelectionTimeoutMS=1000)
+    #if client is None:
+    #    return
 
-    #TODO: Add Counter
-    print(f"{yellow}[=]{end} Scanning {len(lines)} hosts\n")
-    open_instances = 0
+    try:
+        dbs = client.list_database_names()
 
-    for line in lines:
-        ip = line.strip('\n')
-        client = MongoClient(str(ip), socketTimeoutMS=1000, serverSelectionTimeoutMS=1000)
-        if client is None:
-            continue
+        print(f"{green}[+]{end} {ip}            ")
 
-        try:
-            dbs = client.list_database_names()
+        if args.output != None:
+            with open(args.output, 'a') as f:
+                f.write(f"{ip}\n")
+ 
+        open_instances+=1                
 
-            print(f"{green}[+]{end} {ip}")
-
-            if args.output != None:
-                with open(args.output, 'a') as f:
-                    f.write(f"{ip}\n")
-            open_instances+=1                
-            continue
-
-        except Exception:
-            continue
-    
-    print(f"{green}[+]{end} Found {open_instances} open hosts out of {len(lines)}")
-    print("Thank You")
+    except Exception:
+        pass
 
 
 def InputFile(file):
@@ -103,7 +88,7 @@ def InputFile(file):
     with open(file, 'r') as f:
         lines = f.readlines()
     
-    main(lines)
+    return lines
     
 
 def Shodan():
@@ -119,17 +104,68 @@ def Shodan():
         ip = result['ip_str']
         lines.append(ip)
     
-    main(lines)
+    return lines
 
 
-if args.input != None:
-    InputFile(args.input)
+def Masscan():
+    banner()
 
-elif args.shodan != None:
-    Shodan()
+    print(f"{yellow}[=]{end} Checking for masscan installation")
+    
+    if not os.path.isfile('/usr/bin/masscan'):
+        print(f"{red}[-]{end} Make sure you've installed Masscan and it's present in the '/usr/bin/' directory")
+        exit(0)
 
-else:
-    exit(0)
+    banner()
+    print(f"{yellow}[=]{end} Getting MongoDB Hosts from masscan")
 
-#TODO: Add masscan
+    input(f"{yellow}[=]{end} If you cannot wait for the scan to finish hit 'ctrl/cmd + c' to stop the scan and wait a few seconds. Hit ENTER to contine")
+    
+    try:
+        os.system("masscan 0.0.0.0/0 -p27017 --exclude 255.255.255.255 --rate 1000000 --open-only | awk '{print $6}' > masscan.txt")
+    except KeyboardInterrupt:
+        pass
+
+    lines = InputFile('masscan.txt')
+    return lines
+
+
+def main():
+    banner()
+
+    try:
+        requests.get('https://google.com')
+        pass
+    except:
+        print(f"{red}[-]{end} Network Issue, make sure your network connection is working and retry")
+        exit(0)
+
+
+    if args.input != None:
+        lines = InputFile(args.input)
+
+    elif args.shodan != None:
+        lines = Shodan()
+
+    elif args.masscan != None:
+        lines = Masscan()
+
+    else:
+        exit(0)
+
+    print(f"{yellow}[=]{end} Scanning {len(lines)} hosts\n")
+
+    i = 1
+    for line in lines:
+        ip = line.strip('\n')
+        Check(ip)
+        print(f"{green}[+]{end} Scanned {i}/{len(lines)} hosts", end="\r")
+        i += 1
+
+    print(f"{green}[+]{end} Found {open_instances} open hosts out of {len(lines)}")
+    print("Thank You")
+
+
+if __name__ == "__main__":
+    main()
 
