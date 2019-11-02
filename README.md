@@ -20,13 +20,13 @@
 
 * Python >= 3.6.8
 
-* ~~[Masscan](https://github.com/robertdavidgraham/masscan)~~
+* [Masscan](https://github.com/robertdavidgraham/masscan)
 
 * Shodan API key
 
 ## FEATURES
 
-* Checks for Open MongoDB instances on the Internet with Shodan or ~~Masscan~~
+* Checks for Open MongoDB instances on the Internet with Shodan or Masscan
 
 * You can also provide your own Host List
 
