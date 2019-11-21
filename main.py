@@ -122,7 +122,7 @@ def Masscan():
     input(f"{yellow}[=]{end} If you cannot wait for the scan to finish hit 'ctrl/cmd + c' to stop the scan and wait a few seconds. Hit ENTER to contine")
     
     try:
-        os.system(f"masscan 0.0.0.0/0 -p27017 --exclude 255.255.255.255 --rate {args.masscan} --open-only | awk '{print $6}' > masscan.txt")
+        os.system("masscan 0.0.0.0/0 -p27017 --exclude 255.255.255.255 --rate {0} --open-only | awk '{print $6}' > masscan.txt").format(args.masscan)
     except KeyboardInterrupt:
         pass
 
