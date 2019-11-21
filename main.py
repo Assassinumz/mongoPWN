@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-i', '--input', help="Hosts IPs file path, must be in seperate lines")
 group.add_argument('-s', '--shodan', help="Get a list of hosts from shodan, provide the API key")
-group.add_argument('-m', '--masscan', help="Get a list of hosts from masscan")
+group.add_argument('-m', '--masscan', help="Get a list of hosts from masscan, provide the speed at which the scan takes place (example: 1000000)")
 
 parser.add_argument('-o', '--output', help='Output open Hosts IPs to a file')
 args = parser.parse_args()
@@ -122,7 +122,7 @@ def Masscan():
     input(f"{yellow}[=]{end} If you cannot wait for the scan to finish hit 'ctrl/cmd + c' to stop the scan and wait a few seconds. Hit ENTER to contine")
     
     try:
-        os.system("masscan 0.0.0.0/0 -p27017 --exclude 255.255.255.255 --rate 1000000 --open-only | awk '{print $6}' > masscan.txt")
+        os.system(f"masscan 0.0.0.0/0 -p27017 --exclude 255.255.255.255 --rate {args.masscan} --open-only | awk '{print $6}' > masscan.txt")
     except KeyboardInterrupt:
         pass
 
